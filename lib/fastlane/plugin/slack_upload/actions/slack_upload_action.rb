@@ -3,17 +3,14 @@ module Fastlane
   module Actions
     class SlackUploadAction < Action
       def self.run(params)
-        require 'slack-ruby-client'
+        require 'net/http'
+        require 'json'
+        require 'uri'
         
         title = params[:title]
         filepath = params[:file_path]
         filename = params[:file_name]
         initialComment = params[:initial_comment]
-
-        if params[:channel].to_s.length > 0 # From `slack` plugin implementation: https://github.com/fastlane/fastlane/blob/master/fastlane/lib/fastlane/actions/slack.rb
-          channel = params[:channel]
-          channel = ('#' + params[:channel]) unless ['#', '@'].include?(channel[0]) # send message to channel by default
-        end
 
         if params[:file_type].to_s.empty?
           filetype = File.extname(filepath)[1..-1] # Remove '.' from the file extension
@@ -21,23 +18,73 @@ module Fastlane
           filetype = params[:file_type]
         end
 
-        Slack.configure do |config|
-          config.token = params[:slack_api_token]
-        end
-
-        client = Slack::Web::Client.new
-        
         begin
-          results = client.files_upload(
-                    channels: channel,
-                    as_user: true,
-                    file: Faraday::UploadIO.new(filepath, filetype),
-                    title: title,
-                    filename: filename,
-                    initial_comment: initialComment
-                  )
+          # Get upload URL
+          uri = URI("https://slack.com/api/files.getUploadURLExternal")
+          uri.query = URI.encode_www_form([["filename", filename], ["length", File.size(filepath)]])
+          req = Net::HTTP::Post.new(uri)
+          req['Authorization'] = "Bearer #{params[:slack_api_token]}"
+          req['Content-Type'] = "application/json"
+
+          response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+            http.request(req)
+          end
+
+          data = JSON.parse(response.body)
+          if not data['ok']
+            raise "Error getting upload URL: #{data['error']}"
+          end
+          file_id = data['file_id']
+          upload_url = data['upload_url']
+
+          # Upload file
+          file = File.open(filepath, 'rb')
+
+          uri = URI(upload_url)
+          req = Net::HTTP::Post.new(uri)
+          req['Content-Type'] = 'application/octet-stream'
+          req.body = file.read
+
+          response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+            http.request(req)
+          end
+
+          file.close
+
+          if response.code.to_i != 200
+            raise "Error uploading file: #{response.body}"
+          end
+
+          UI.success("Uploaded file to Slack: id=#{file_id}")
+
+          # Complete upload
+          files = JSON.generate([{id: file_id, title: title}])
+
+          UI.message("Completing upload: #{files}")
+
+          uri = URI("https://slack.com/api/files.completeUploadExternal")
+          uri.query = URI.encode_www_form({
+            files: files,
+            channel_id: params[:channel],
+            initial_comment: initialComment
+          })
+          req = Net::HTTP::Post.new(uri)
+          req['Authorization'] = "Bearer #{params[:slack_api_token]}"
+
+          UI.success("Completing upload: #{uri}")
+
+          response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+            http.request(req)
+          end
+
+          data = JSON.parse(response.body)
+    
+          if not data['ok']
+            raise "Error completing upload: #{data['error']}"
+          end
         rescue => exception
           UI.error("Exception: #{exception}")
+          UI.error("Backtrace:\n\t#{exception.backtrace.join("\n\t")}")
         ensure
           UI.success('Successfully sent file to Slack')
         end
