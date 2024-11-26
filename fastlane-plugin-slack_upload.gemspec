@@ -7,11 +7,11 @@ require 'fastlane/plugin/slack_upload/version'
 Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-slack_upload'
   spec.version       = Fastlane::SlackUpload::VERSION
-  spec.author        = 'Dawid Cieslak'
-  spec.email         = 'cieslakdawid@gmail.com'
+  spec.authors       = ['Dawid Cieslak', 'Zvonimir Rudinski']
+  spec.email         = ['cieslakdawid@gmail.com', 'zvonimir.rudinski@noubis.com']
 
   spec.summary       = 'Uploads specified file to Slack'
-  spec.homepage      = "https://github.com/cieslakdawid/fastlane-plugin-slack_upload"
+  spec.homepage      = "https://github.com/NoubisServices/fastlane-plugin-slack_upload"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
