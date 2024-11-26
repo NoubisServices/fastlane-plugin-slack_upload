@@ -39,8 +39,7 @@ module Fastlane
           upload_url = data['upload_url']
 
           # Upload file
-          uri = URI(upload_url)
-          req = Faraday.post(uri) do |req|
+          req = Faraday.post(upload_url) do |req|
             req.body = Faraday::UploadIO.new(filepath, filetype)
           end
 
