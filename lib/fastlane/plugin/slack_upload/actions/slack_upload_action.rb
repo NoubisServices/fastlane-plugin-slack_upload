@@ -124,7 +124,7 @@ module Fastlane
       end
 
       def self.authors
-        ['Dawid Cieslak']
+        ['Dawid Cieslak', 'Zvonimir Rudinski']
       end
 
       def self.example_code
