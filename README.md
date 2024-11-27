@@ -2,8 +2,6 @@
 
 [![fastlane Plugin Badge](https://rawcdn.githack.com/fastlane/fastlane/master/fastlane/assets/plugin-badge.svg)](https://rubygems.org/gems/fastlane-plugin-slack_upload)
 
- ![![RubyGem Download Badge]](https://ruby-gem-downloads-badge.herokuapp.com/fastlane-plugin-slack_upload)
-
 This plugin simply uploads a given file to your Slack. 
 
 Sometimes as part of CI builds you want to generate some files from the project that might be valuable for your team. You can think about documentation or screenshots of the application on different devices. With `slack_uplaod` it's easy to send them to dedicated `Slack` channel or directly to your teammates. 
@@ -46,10 +44,10 @@ lane :screenshots_lane do
     # Upload to slack
     slack_upload(
             slack_api_token: "xyz", # Preferably configure as ENV['SLACK_API_TOKEN']
-            title: "New version #{version} is available ",
-            channel: "#general",
+            title: "screenshots.zip",
+            channel: "channel_id",
             file_path: "./fastlane/screenshots.zip",
-            initial_comment: "Changelog goes here"
+            initial_comment: "Message goes here"
     ) 
   end
 ```
