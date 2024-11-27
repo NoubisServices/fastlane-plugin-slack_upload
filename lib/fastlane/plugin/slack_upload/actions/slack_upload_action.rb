@@ -130,8 +130,8 @@ module Fastlane
       def self.example_code
         [
           'slack_upload(
-            title: "New version #{version} is available ",
-            channel: "#general",
+            title: "screenshots.zip",
+            channel: "channel_id",
             file_path: "./screenshots.zip"
           )',
           'slack_upload(
