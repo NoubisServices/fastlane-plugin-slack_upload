@@ -9,9 +9,11 @@ module Fastlane
         require 'faraday'
 
         title = params[:title]
+        channel_id = params[:channel]
         filepath = params[:file_path]
         filename = params[:file_name]
-        initialComment = params[:initial_comment]
+        token = params[:slack_api_token]
+        initial_comment = params[:initial_comment]
 
         if params[:file_type].to_s.empty?
           filetype = File.extname(filepath)[1..-1] # Remove '.' from the file extension
@@ -24,7 +26,7 @@ module Fastlane
           uri = URI("https://slack.com/api/files.getUploadURLExternal")
           uri.query = URI.encode_www_form([["filename", filename], ["length", File.size(filepath)]])
           req = Net::HTTP::Post.new(uri)
-          req['Authorization'] = "Bearer #{params[:slack_api_token]}"
+          req['Authorization'] = "Bearer #{token}"
           req['Content-Type'] = "application/json"
 
           response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
@@ -39,8 +41,8 @@ module Fastlane
           upload_url = data['upload_url']
 
           # Upload file
-          req = Faraday.post(upload_url) do |req|
-            req.body = Faraday::UploadIO.new(filepath, filetype)
+          req = Faraday.post(upload_url) do |http|
+            http.body = Faraday::UploadIO.new(filepath, filetype)
           end
 
           if response.code.to_i != 200
@@ -57,11 +59,11 @@ module Fastlane
           uri = URI("https://slack.com/api/files.completeUploadExternal")
           uri.query = URI.encode_www_form({
             files: files,
-            channel_id: params[:channel],
-            initial_comment: initialComment
+            channel_id: channel_id,
+            initial_comment: initial_comment
           })
           req = Net::HTTP::Post.new(uri)
-          req['Authorization'] = "Bearer #{params[:slack_api_token]}"
+          req['Authorization'] = "Bearer #{token}"
 
           UI.success("Completing upload: #{uri}")
 
