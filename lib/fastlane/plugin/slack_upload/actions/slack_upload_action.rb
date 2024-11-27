@@ -7,7 +7,7 @@ module Fastlane
         require 'json'
         require 'uri'
         require 'faraday'
-        
+
         title = params[:title]
         filepath = params[:file_path]
         filename = params[:file_name]
@@ -32,7 +32,7 @@ module Fastlane
           end
 
           data = JSON.parse(response.body)
-          if not data['ok']
+          unless data['ok']
             raise "Error getting upload URL: #{data['error']}"
           end
           file_id = data['file_id']
@@ -50,7 +50,7 @@ module Fastlane
           UI.success("Uploaded file to Slack: id=#{file_id}")
 
           # Complete upload
-          files = JSON.generate([{id: file_id, title: title}])
+          files = JSON.generate([{ id: file_id, title: title }])
 
           UI.message("Completing upload: #{files}")
 
@@ -70,11 +70,11 @@ module Fastlane
           end
 
           data = JSON.parse(response.body)
-    
-          if not data['ok']
+
+          unless data['ok']
             raise "Error completing upload: #{data['error']}"
           end
-        rescue => exception
+        rescue StandardError => exception
           UI.error("Exception: #{exception}")
           UI.error("Backtrace:\n\t#{exception.backtrace.join("\n\t")}")
         ensure
@@ -111,7 +111,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :initial_comment,
                                        env_name: "SLACK_UPLOAD_INITIAL_COMMENT",
                                        description: "Initial comment to add to file",
-                                       optional: true)                  
+                                       optional: true)
         ]
       end
 
@@ -135,7 +135,7 @@ module Fastlane
             file_path: "./screenshots.zip"
           )',
           'slack_upload(
-            slack_api_token: "xyz", 
+            slack_api_token: "xyz",
             title: "screenshots.zip",
             channel: "channel_id",
             file_path: "./screenshots.zip",
