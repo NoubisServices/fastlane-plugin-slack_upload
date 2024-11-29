@@ -11,7 +11,6 @@ module Fastlane
         title = params[:title]
         channel_id = params[:channel]
         filepath = params[:file_path]
-        filename = params[:file_name]
         token = params[:slack_api_token]
         initial_comment = params[:initial_comment]
 
@@ -19,6 +18,12 @@ module Fastlane
           filetype = File.extname(filepath)[1..-1] # Remove '.' from the file extension
         else
           filetype = params[:file_type]
+        end
+
+        if params[:file_name].to_s.empty?
+          filename = File.basename(filepath)
+        else
+          filename = params[:file_name]
         end
 
         begin
