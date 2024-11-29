@@ -6,7 +6,6 @@ module Fastlane
         require 'net/http'
         require 'json'
         require 'uri'
-        require 'faraday'
 
         title = params[:title]
         channel_id = params[:channel]
@@ -46,9 +45,18 @@ module Fastlane
           upload_url = data['upload_url']
 
           # Upload file
-          req = Faraday.post(upload_url) do |http|
-            http.body = Faraday::UploadIO.new(filepath, filetype)
+          file = File.open(filepath, 'rb')
+
+          uri = URI(upload_url)
+          req = Net::HTTP::Post.new(uri)
+          req['Content-Type'] = 'application/octet-stream'
+          req.body = file.read
+
+          response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+            http.request(req)
           end
+
+          file.close
 
           if response.code.to_i != 200
             raise "Error uploading file: #{response.body}"
